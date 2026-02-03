@@ -1,0 +1,184 @@
+---
+# GitLab CI/CD Pipeline — Liquibase MySQL Migrations
+# Stages: validate → test → deploy-dev → deploy-staging → deploy-prod
+
+stages:
+  - validate
+  - test
+  - deploy-dev
+  - deploy-staging
+  - deploy-prod
+
+variables:
+  LIQUIBASE_IMAGE: "liquibase/liquibase:4.25"
+  MYSQL_IMAGE: "mysql:8.0"
+  MYSQL_DATABASE: "appdb"
+  MYSQL_USER: "appuser"
+  MYSQL_PASSWORD: "apppassword"
+  MYSQL_ROOT_PASSWORD: "rootpassword"
+  LIQUIBASE_CHANGELOG: "changelog/db.changelog-master.xml"
+
+# ─── Default settings ───────────────────────────────────────────────────────
+default:
+  image: $LIQUIBASE_IMAGE
+  before_script:
+    - cp liquibase/liquibase.properties /liquibase/liquibase.properties
+
+# ─── Stage: validate ────────────────────────────────────────────────────────
+validate:changelog:
+  stage: validate
+  script:
+    - liquibase
+        --changeLogFile="$LIQUIBASE_CHANGELOG"
+        --url="jdbc:mysql://localhost:3306/$MYSQL_DATABASE?useSSL=false&allowPublicKeyRetrieval=true"
+        --username="$MYSQL_USER"
+        --password="$MYSQL_PASSWORD"
+        validate
+  only:
+    - merge_requests
+    - main
+    - /^release\/.*/
+
+# ─── Stage: test ────────────────────────────────────────────────────────────
+test:migrations:
+  stage: test
+  image: docker:24
+  services:
+    - name: $MYSQL_IMAGE
+      alias: mysql
+      variables:
+        MYSQL_DATABASE: $MYSQL_DATABASE
+        MYSQL_USER: $MYSQL_USER
+        MYSQL_PASSWORD: $MYSQL_PASSWORD
+        MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
+  before_script:
+    - apk add --no-cache bash
+    - |
+      for i in $(seq 1 30); do
+        docker run --rm --network=host mysql:8.0 \
+          mysqladmin ping -h localhost -u root -p"$MYSQL_ROOT_PASSWORD" --silent && break
+        echo "Waiting for MySQL... ($i/30)"
+        sleep 3
+      done
+  script:
+    - docker run --rm
+        --network=host
+        -v "$CI_PROJECT_DIR/liquibase/changelog:/liquibase/changelog"
+        "$LIQUIBASE_IMAGE"
+        --url="jdbc:mysql://localhost:3306/$MYSQL_DATABASE?useSSL=false&allowPublicKeyRetrieval=true"
+        --username="$MYSQL_USER"
+        --password="$MYSQL_PASSWORD"
+        --changeLogFile="$LIQUIBASE_CHANGELOG"
+        update
+    - echo "Verifying applied changesets..."
+    - docker run --rm
+        --network=host
+        mysql:8.0 mysql
+        -h localhost -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"
+        -e "SELECT COUNT(*) as changeset_count FROM DATABASECHANGELOG;"
+  only:
+    - merge_requests
+    - main
+
+# ─── Stage: deploy-dev ──────────────────────────────────────────────────────
+deploy:dev:
+  stage: deploy-dev
+  environment:
+    name: development
+  variables:
+    DB_HOST: $DEV_DB_HOST
+    DB_NAME: $DEV_DB_NAME
+    DB_USER: $DEV_DB_USER
+    DB_PASSWORD: $DEV_DB_PASSWORD
+  script:
+    - liquibase
+        --changeLogFile="$LIQUIBASE_CHANGELOG"
+        --url="jdbc:mysql://$DB_HOST:3306/$DB_NAME?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+        --username="$DB_USER"
+        --password="$DB_PASSWORD"
+        status --verbose
+    - liquibase
+        --changeLogFile="$LIQUIBASE_CHANGELOG"
+        --url="jdbc:mysql://$DB_HOST:3306/$DB_NAME?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+        --username="$DB_USER"
+        --password="$DB_PASSWORD"
+        update
+  only:
+    - main
+    - develop
+
+# ─── Stage: deploy-staging ──────────────────────────────────────────────────
+deploy:staging:
+  stage: deploy-staging
+  environment:
+    name: staging
+  variables:
+    DB_HOST: $STAGING_DB_HOST
+    DB_NAME: $STAGING_DB_NAME
+    DB_USER: $STAGING_DB_USER
+    DB_PASSWORD: $STAGING_DB_PASSWORD
+  script:
+    - liquibase
+        --changeLogFile="$LIQUIBASE_CHANGELOG"
+        --url="jdbc:mysql://$DB_HOST:3306/$DB_NAME?useSSL=true&serverTimezone=UTC"
+        --username="$DB_USER"
+        --password="$DB_PASSWORD"
+        status --verbose
+    - liquibase
+        --changeLogFile="$LIQUIBASE_CHANGELOG"
+        --url="jdbc:mysql://$DB_HOST:3306/$DB_NAME?useSSL=true&serverTimezone=UTC"
+        --username="$DB_USER"
+        --password="$DB_PASSWORD"
+        update
+  only:
+    - /^release\/.*/
+  when: on_success
+
+# ─── Stage: deploy-prod ─────────────────────────────────────────────────────
+deploy:prod:dry-run:
+  stage: deploy-prod
+  environment:
+    name: production
+  variables:
+    DB_HOST: $PROD_DB_HOST
+    DB_NAME: $PROD_DB_NAME
+    DB_USER: $PROD_DB_USER
+    DB_PASSWORD: $PROD_DB_PASSWORD
+  script:
+    - liquibase
+        --changeLogFile="$LIQUIBASE_CHANGELOG"
+        --url="jdbc:mysql://$DB_HOST:3306/$DB_NAME?useSSL=true&requireSSL=true&serverTimezone=UTC"
+        --username="$DB_USER"
+        --password="$DB_PASSWORD"
+        updateSQL
+  only:
+    - tags
+  when: manual
+
+deploy:prod:
+  stage: deploy-prod
+  environment:
+    name: production
+  variables:
+    DB_HOST: $PROD_DB_HOST
+    DB_NAME: $PROD_DB_NAME
+    DB_USER: $PROD_DB_USER
+    DB_PASSWORD: $PROD_DB_PASSWORD
+  script:
+    - liquibase
+        --changeLogFile="$LIQUIBASE_CHANGELOG"
+        --url="jdbc:mysql://$DB_HOST:3306/$DB_NAME?useSSL=true&requireSSL=true&serverTimezone=UTC"
+        --username="$DB_USER"
+        --password="$DB_PASSWORD"
+        tag "$CI_COMMIT_TAG"
+    - liquibase
+        --changeLogFile="$LIQUIBASE_CHANGELOG"
+        --url="jdbc:mysql://$DB_HOST:3306/$DB_NAME?useSSL=true&requireSSL=true&serverTimezone=UTC"
+        --username="$DB_USER"
+        --password="$DB_PASSWORD"
+        update
+  only:
+    - tags
+  when: manual
+  needs:
+    - deploy:prod:dry-run
