@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- ==========================================
+         Release: v1.0.0
+         Description: Initial database schema
+         Author: Pranith Reddy M
+         Date: 2026-01-15
+         ========================================== -->
+
+    <changeSet id="1.0.0-001" author="pranithreddym">
+        <comment>Create users table</comment>
+        <sqlFile path="changelog/releases/v1.0.0/sql/001_create_users_table.sql"
+                 relativeToChangelogFile="false"
+                 encoding="UTF-8"/>
+        <rollback>
+            <sqlFile path="changelog/releases/v1.0.0/sql/001_create_users_table_rollback.sql"
+                     relativeToChangelogFile="false"
+                     encoding="UTF-8"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="1.0.0-002" author="pranithreddym">
+        <comment>Create products table</comment>
+        <sqlFile path="changelog/releases/v1.0.0/sql/002_create_products_table.sql"
+                 relativeToChangelogFile="false"
+                 encoding="UTF-8"/>
+        <rollback>
+            <sqlFile path="changelog/releases/v1.0.0/sql/002_create_products_table_rollback.sql"
+                     relativeToChangelogFile="false"
+                     encoding="UTF-8"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="1.0.0-003" author="pranithreddym">
+        <comment>Create orders and order_items tables</comment>
+        <sqlFile path="changelog/releases/v1.0.0/sql/003_create_orders_table.sql"
+                 relativeToChangelogFile="false"
+                 encoding="UTF-8"/>
+        <rollback>
+            <sqlFile path="changelog/releases/v1.0.0/sql/003_create_orders_table_rollback.sql"
+                     relativeToChangelogFile="false"
+                     encoding="UTF-8"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="1.0.0-004" author="pranithreddym">
+        <comment>Seed reference data</comment>
+        <sqlFile path="changelog/releases/v1.0.0/sql/004_seed_reference_data.sql"
+                 relativeToChangelogFile="false"
+                 encoding="UTF-8"/>
+        <rollback>
+            <sqlFile path="changelog/releases/v1.0.0/sql/004_seed_reference_data_rollback.sql"
+                     relativeToChangelogFile="false"
+                     encoding="UTF-8"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

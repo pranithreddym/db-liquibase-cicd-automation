@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- ==========================================
+         Release: v1.1.0
+         Description: Schema enhancements
+         Author: Pranith Reddy M
+         Date: 2026-02-05
+         ========================================== -->
+
+    <changeSet id="1.1.0-001" author="pranithreddym">
+        <comment>Add status and last_login columns to users table</comment>
+        <sqlFile path="changelog/releases/v1.1.0/sql/001_add_user_status.sql"
+                 relativeToChangelogFile="false"
+                 encoding="UTF-8"/>
+        <rollback>
+            <sqlFile path="changelog/releases/v1.1.0/sql/001_add_user_status_rollback.sql"
+                     relativeToChangelogFile="false"
+                     encoding="UTF-8"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="1.1.0-002" author="pranithreddym">
+        <comment>Add parent category support and product tags</comment>
+        <sqlFile path="changelog/releases/v1.1.0/sql/002_add_product_category.sql"
+                 relativeToChangelogFile="false"
+                 encoding="UTF-8"/>
+        <rollback>
+            <sqlFile path="changelog/releases/v1.1.0/sql/002_add_product_category_rollback.sql"
+                     relativeToChangelogFile="false"
+                     encoding="UTF-8"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="1.1.0-003" author="pranithreddym">
+        <comment>Create audit_log table for change tracking</comment>
+        <sqlFile path="changelog/releases/v1.1.0/sql/003_create_audit_log.sql"
+                 relativeToChangelogFile="false"
+                 encoding="UTF-8"/>
+        <rollback>
+            <sqlFile path="changelog/releases/v1.1.0/sql/003_create_audit_log_rollback.sql"
+                     relativeToChangelogFile="false"
+                     encoding="UTF-8"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
