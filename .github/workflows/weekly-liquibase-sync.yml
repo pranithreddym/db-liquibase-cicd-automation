@@ -1,0 +1,115 @@
+name: Weekly Liquibase Sync
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"   # Every Monday at 09:00 UTC
+  workflow_dispatch:        # Allow manual trigger from GitHub UI
+
+# Required repo setting to enable PR creation via GITHUB_TOKEN:
+#   Settings → Actions → General → Workflow permissions
+#   → check "Allow GitHub Actions to create and approve pull requests"
+#
+# Alternatively, add a PAT with `repo` scope as secret PAT_TOKEN and it
+# will be used instead, bypassing the repo-level restriction.
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"   # opt into Node.js 24 runtime
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  weekly-sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout ───────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+
+      # ── 2. Set git author (no bot attribution) ────────────────────────────
+      - name: Configure git identity
+        run: |
+          git config user.name  "Pranith Reddy M"
+          git config user.email "pranithreddym@gmail.com"
+
+      # ── 3. Capture run date ───────────────────────────────────────────────
+      - name: Set run date
+        run: echo "RUN_DATE=$(date -u +%Y-%m-%d)" >> "$GITHUB_ENV"
+
+      # ── 4. Set up Python ──────────────────────────────────────────────────
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # ── 5. Check latest Liquibase release ─────────────────────────────────
+      - name: Fetch latest Liquibase version
+        id: liquibase_version
+        run: |
+          LATEST=$(curl -s \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/liquibase/liquibase/releases/latest \
+            | python3 -c "import sys,json; print(json.load(sys.stdin)['tag_name'].lstrip('v'))")
+          echo "version=$LATEST" >> "$GITHUB_OUTPUT"
+          echo "Latest Liquibase version: $LATEST"
+
+      # ── 6. Run weekly sync script ─────────────────────────────────────────
+      - name: Run weekly Liquibase sync
+        run: python scripts/ai/weekly_liquibase_sync.py
+
+      # ── 7. Run migration advisor (dry-run for PR description) ─────────────
+      - name: Run migration advisor dry-run
+        id: advisor
+        run: |
+          OUTPUT=$(python scripts/ai/migration_advisor.py --dry-run 2>&1 || true)
+          echo "output<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$OUTPUT" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      # ── 8. Detect changes ─────────────────────────────────────────────────
+      - name: Check for changes
+        id: changes
+        run: |
+          git diff --quiet && echo "changed=false" >> "$GITHUB_OUTPUT" || echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      # ── 9. Commit and open PR if anything changed ─────────────────────────
+      - name: Create Pull Request
+        if: steps.changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+          branch: weekly-sync/${{ env.RUN_DATE }}
+          commit-message: "chore: weekly Liquibase sync ${{ env.RUN_DATE }}"
+          author: "Pranith Reddy M <pranithreddym@gmail.com>"
+          committer: "Pranith Reddy M <pranithreddym@gmail.com>"
+          title: "chore: weekly Liquibase sync — ${{ env.RUN_DATE }}"
+          body: |
+            ## Weekly Liquibase Sync
+
+            **Date:** ${{ env.RUN_DATE }}
+            **Latest Liquibase:** `${{ steps.liquibase_version.outputs.version }}`
+
+            ### What changed
+            - Updated `LIQUIBASE_IMAGE` in `.gitlab-ci.yml` if a new Liquibase version was detected
+            - Ran schema analysis (migration advisor dry-run output below)
+            - Appended entry to `docs/weekly-updates.md`
+
+            ### Migration Advisor Output
+            ```
+            ${{ steps.advisor.outputs.output }}
+            ```
+
+            > This PR was opened automatically by the weekly sync workflow.
+            > Review the changes and merge when ready, or close if no action is needed.
+          labels: "automated,liquibase,weekly-sync"
+          delete-branch: true
+
+      # ── 10. Report no-op ──────────────────────────────────────────────────
+      - name: No changes detected
+        if: steps.changes.outputs.changed == 'false'
+        run: echo "Everything is already up-to-date — no PR needed."
