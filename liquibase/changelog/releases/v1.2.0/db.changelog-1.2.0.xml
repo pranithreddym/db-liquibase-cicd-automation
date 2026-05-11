@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- ==========================================
+         Release: v1.2.0
+         Description: AI infrastructure layer
+         Author: Pranith Reddy M
+         Date: 2026-05-07
+         ========================================== -->
+
+    <changeSet id="1.2.0-001" author="pranithreddym">
+        <comment>Create ai_model_registry — lifecycle tracking for all ML/AI models</comment>
+        <sqlFile path="changelog/releases/v1.2.0/sql/001_create_ai_model_registry.sql"
+                 relativeToChangelogFile="false"
+                 encoding="UTF-8"/>
+        <rollback>
+            <sqlFile path="changelog/releases/v1.2.0/sql/001_create_ai_model_registry_rollback.sql"
+                     relativeToChangelogFile="false"
+                     encoding="UTF-8"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="1.2.0-002" author="pranithreddym">
+        <comment>Create ai_recommendations — AI-generated product recommendations with click/purchase feedback</comment>
+        <sqlFile path="changelog/releases/v1.2.0/sql/002_create_ai_recommendations.sql"
+                 relativeToChangelogFile="false"
+                 encoding="UTF-8"/>
+        <rollback>
+            <sqlFile path="changelog/releases/v1.2.0/sql/002_create_ai_recommendations_rollback.sql"
+                     relativeToChangelogFile="false"
+                     encoding="UTF-8"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="1.2.0-003" author="pranithreddym">
+        <comment>Create ai_feature_store — pre-computed ML features for low-latency model serving</comment>
+        <sqlFile path="changelog/releases/v1.2.0/sql/003_create_ai_feature_store.sql"
+                 relativeToChangelogFile="false"
+                 encoding="UTF-8"/>
+        <rollback>
+            <sqlFile path="changelog/releases/v1.2.0/sql/003_create_ai_feature_store_rollback.sql"
+                     relativeToChangelogFile="false"
+                     encoding="UTF-8"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- ==========================================
+         Release: v1.3.0
+         Description: Vector search and semantic layer
+         Author: Pranith Reddy M
+         Date: 2026-05-07
+         ========================================== -->
+
+    <changeSet id="1.3.0-001" author="pranithreddym">
+        <comment>Create vector_embeddings — metadata bridge linking MySQL entities to their external vector representations</comment>
+        <sqlFile path="changelog/releases/v1.3.0/sql/001_create_vector_embeddings.sql"
+                 relativeToChangelogFile="false"
+                 encoding="UTF-8"/>
+        <rollback>
+            <sqlFile path="changelog/releases/v1.3.0/sql/001_create_vector_embeddings_rollback.sql"
+                     relativeToChangelogFile="false"
+                     encoding="UTF-8"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="1.3.0-002" author="pranithreddym">
+        <comment>Create semantic_search_log — query analytics and training data for retrieval models</comment>
+        <sqlFile path="changelog/releases/v1.3.0/sql/002_create_semantic_search_log.sql"
+                 relativeToChangelogFile="false"
+                 encoding="UTF-8"/>
+        <rollback>
+            <sqlFile path="changelog/releases/v1.3.0/sql/002_create_semantic_search_log_rollback.sql"
+                     relativeToChangelogFile="false"
+                     encoding="UTF-8"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

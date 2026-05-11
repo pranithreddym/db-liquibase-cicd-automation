@@ -11,4 +11,10 @@
     <!-- v1.1.0: Schema enhancements -->
     <include file="changelog/releases/v1.1.0/db.changelog-1.1.0.xml"/>
 
+    <!-- v1.2.0: AI infrastructure — model registry, recommendations, feature store -->
+    <include file="changelog/releases/v1.2.0/db.changelog-1.2.0.xml"/>
+
+    <!-- v1.3.0: Vector search — embedding metadata, semantic search log -->
+    <include file="changelog/releases/v1.3.0/db.changelog-1.3.0.xml"/>
+
 </databaseChangeLog>
