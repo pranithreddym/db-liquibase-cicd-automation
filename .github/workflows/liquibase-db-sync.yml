@@ -1,4 +1,4 @@
-name: Weekly Liquibase Sync
+name: Liquibase DB Sync
 
 on:
   schedule:
@@ -20,7 +20,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  weekly-sync:
+  db-sync:
     runs-on: ubuntu-latest
 
     steps:
@@ -31,7 +31,7 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
 
-      # ── 2. Set git author (no bot attribution) ────────────────────────────
+      # ── 2. Set git author ─────────────────────────────────────────────────
       - name: Configure git identity
         run: |
           git config user.name  "Pranith Reddy M"
@@ -58,9 +58,9 @@ jobs:
           echo "version=$LATEST" >> "$GITHUB_OUTPUT"
           echo "Latest Liquibase version: $LATEST"
 
-      # ── 6. Run weekly sync script ─────────────────────────────────────────
-      - name: Run weekly Liquibase sync
-        run: python scripts/ai/weekly_liquibase_sync.py
+      # ── 6. Run sync script ────────────────────────────────────────────────
+      - name: Run Liquibase sync
+        run: python scripts/ai/liquibase_sync.py
 
       # ── 7. Run migration advisor (dry-run for PR description) ─────────────
       - name: Run migration advisor dry-run
@@ -83,13 +83,13 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
-          branch: weekly-sync/${{ env.RUN_DATE }}
-          commit-message: "chore: weekly Liquibase sync ${{ env.RUN_DATE }}"
+          branch: db-sync/${{ env.RUN_DATE }}
+          commit-message: "chore: Liquibase DB sync ${{ env.RUN_DATE }}"
           author: "Pranith Reddy M <pranithreddym@gmail.com>"
           committer: "Pranith Reddy M <pranithreddym@gmail.com>"
-          title: "chore: weekly Liquibase sync — ${{ env.RUN_DATE }}"
+          title: "chore: Liquibase DB sync — ${{ env.RUN_DATE }}"
           body: |
-            ## Weekly Liquibase Sync
+            ## Liquibase DB Sync
 
             **Date:** ${{ env.RUN_DATE }}
             **Latest Liquibase:** `${{ steps.liquibase_version.outputs.version }}`
@@ -97,16 +97,16 @@ jobs:
             ### What changed
             - Updated `LIQUIBASE_IMAGE` in `.gitlab-ci.yml` if a new Liquibase version was detected
             - Ran schema analysis (migration advisor dry-run output below)
-            - Appended entry to `docs/weekly-updates.md`
+            - Appended entry to `docs/sync-log.md`
 
             ### Migration Advisor Output
             ```
             ${{ steps.advisor.outputs.output }}
             ```
 
-            > This PR was opened automatically by the weekly sync workflow.
+            > This PR was opened automatically by the scheduled sync.
             > Review the changes and merge when ready, or close if no action is needed.
-          labels: "automated,liquibase,weekly-sync"
+          labels: "automated,liquibase,db-sync"
           delete-branch: true
 
       # ── 10. Report no-op ──────────────────────────────────────────────────

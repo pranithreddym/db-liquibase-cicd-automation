@@ -300,9 +300,9 @@ DRY RUN — would create: liquibase/changelog/releases/v1.4.0/db.changelog-1.4.0
 
 ---
 
-# Weekly Liquibase Sync Log
+# Liquibase DB Sync Log
 
-Automated weekly entries appended by `scripts/ai/weekly_liquibase_sync.py`.
+Automated entries appended by `scripts/ai/liquibase_sync.py`.
 
 ---
 
