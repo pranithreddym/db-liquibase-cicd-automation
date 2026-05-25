@@ -77,6 +77,10 @@ def append_weekly_log(entry: str) -> None:
 
 
 def main() -> None:
+    if not os.environ.get("GITHUB_ACTIONS"):
+        print("[INFO] weekly_liquibase_sync.py only runs inside GitHub Actions. Skipping.")
+        sys.exit(0)
+
     today = date.today().isoformat()
     print(f"[{today}] Starting weekly Liquibase sync")
 
