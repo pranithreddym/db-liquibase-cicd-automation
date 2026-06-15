@@ -10,7 +10,7 @@ stages:
   - deploy-prod
 
 variables:
-  LIQUIBASE_IMAGE: "liquibase/liquibase:4.25"
+  LIQUIBASE_IMAGE: "liquibase/liquibase:5.0.3"
   MYSQL_IMAGE: "mysql:8.0"
   MYSQL_DATABASE: "appdb"
   MYSQL_USER: "appuser"

@@ -1,3 +1,65 @@
+## 2026-06-15
+
+- **Liquibase updated**: `4.25` → `5.0.3` in `.gitlab-ci.yml`
+
+### Migration Advisor
+
+```
+Latest version : v1.3.0
+Target version : v1.4.0
+
+============================================================
+SCHEMA ANALYSIS REPORT
+============================================================
+
+[1] Table : orders
+    Type  : column_addition
+    Hint  : Add status_changed_at DATETIME column and an idx on it for time-series queries on status transitions.
+    File  : liquibase/changelog/releases/v1.0.0/sql/003_create_orders_table.sql
+
+[2] Table : orders
+    Type  : soft_delete
+    Hint  : Add soft-delete support: deleted_at DATETIME DEFAULT NULL + index.
+    File  : liquibase/changelog/releases/v1.0.0/sql/003_create_orders_table.sql
+
+[3] Table : audit_log
+    Type  : soft_delete
+    Hint  : Add soft-delete support: deleted_at DATETIME DEFAULT NULL + index.
+    File  : liquibase/changelog/releases/v1.1.0/sql/003_create_audit_log.sql
+
+[4] Table : audit_log
+    Type  : timestamp_addition
+    Hint  : Add updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP.
+    File  : liquibase/changelog/releases/v1.1.0/sql/003_create_audit_log.sql
+
+[5] Table : ai_model_registry
+    Type  : column_addition
+    Hint  : Add status_changed_at DATETIME column and an idx on it for time-series queries on status transitions.
+    File  : liquibase/changelog/releases/v1.2.0/sql/001_create_ai_model_registry.sql
+
+[6] Table : ai_recommendations
+    Type  : soft_delete
+    Hint  : Add soft-delete support: deleted_at DATETIME DEFAULT NULL + index.
+    File  : liquibase/changelog/releases/v1.2.0/sql/002_create_ai_recommendations.sql
+
+[7] Table : ai_feature_store
+    Type  : soft_delete
+    Hint  : Add soft-delete support: deleted_at DATETIME DEFAULT NULL + index.
+    File  : liquibase/changelog/releases/v1.2.0/sql/003_create_ai_feature_store.sql
+
+[8] Table : vector_embeddings
+    Type  : soft_delete
+    Hint  : Add soft-delete support: deleted_at DATETIME DEFAULT NULL + index.
+    File  : liquibase/changelog/releases/v1.3.0/sql/001_create_vector_embeddings.sql
+
+[9] Table : semantic_search_log
+    Type  : soft_delete
+    Hint  : Add soft-delete support: deleted_at DATETIME DEFAULT NULL + index.
+    File  : liquibase/changelog/releases/v1.3.0/sql/002_create_semantic_search_log.sql
+```
+
+---
+
 ## 2026-06-01
 
 - **Liquibase updated**: `4.25` → `5.0.3` in `.gitlab-ci.yml`
